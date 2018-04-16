@@ -102,29 +102,33 @@ function(input, output) {
       dat4 = dat4 %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
       
       pt1 = ggplot(dat1, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
-        scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
+        scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
       pt2 = ggplot(dat2, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
-        scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
+        scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
       pt3 = ggplot(dat3, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
-        scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
+        scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
       pt4 = ggplot(dat4, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
-        scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
+        scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
-      if(input$stem){
+      if(input$breakdown == '2'){
         pt1 = pt1 + geom_bar(position='stack', aes(fill=stem))
         pt2 = pt2 + geom_bar(position='stack', aes(fill=stem))
         pt3 = pt3 + geom_bar(position='stack', aes(fill=stem))
         pt4 = pt4 + geom_bar(position='stack', aes(fill=stem))
+      } else if(input$breakdown == '3'){
+        pt1 = pt1 + geom_bar(position='stack', aes(fill=Year))
+        pt2 = pt2 + geom_bar(position='stack', aes(fill=Year))
+        pt3 = pt3 + geom_bar(position='stack', aes(fill=Year))
+        pt4 = pt4 + geom_bar(position='stack', aes(fill=Year))
       } else{
         pt1 = pt1 + geom_bar(position='dodge', aes(fill=Response))
         pt2 = pt2 + geom_bar(position='dodge', aes(fill=Response))
         pt3 = pt3 + geom_bar(position='dodge', aes(fill=Response))
         pt4 = pt4 + geom_bar(position='dodge', aes(fill=Response))
       }
-      
       
       if(input$count){
         pt1 = pt1 + geom_text(stat='count', aes(label=..count..), vjust=-1, position = position_dodge(width = 1), size=2)
@@ -149,9 +153,10 @@ function(input, output) {
       title = paste0('Responses to "', input$cat, '" Scenarios')
       
       pt = ggplot(dataset, aes(x=Response)) + labs(title=title, y="Count", x="") +
-      scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme
+      scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme
       
-      if(input$stem) pt = pt + geom_bar(position='stack', aes(fill=stem))
+      if(input$breakdown == '2') pt = pt + geom_bar(position='stack', aes(fill=stem))
+      else if(input$breakdown =='3') pt = pt + geom_bar(position='stack', aes(fill=Year))
       else pt = pt + geom_bar(position='dodge', aes(fill=Response))
       
       if(input$count) {
@@ -165,26 +170,28 @@ function(input, output) {
     dataset = dat
     
     pt1 = ggplot(dataset, aes(Year)) + labs(title = "Graduation Year of Participants", x="Graduating Year", y="Count") + 
-      plot_theme + scale_fill_manual(values=c(red, blue)) 
+      plot_theme + scale_fill_manual(values=c(red, blue, green, 'gray')) 
     
-    majors = dataset %>% pull(Majors) %>% unlist() %>% table() %>% as.data.frame()
-    colnames(majors) = c('major', 'freq')
-    majors$stem = sapply(majors$major, is_stem)
-    majors$major <- factor(majors$major, levels = majors$major[order(majors$freq, decreasing = T)])
-    pt2 = ggplot(majors, aes(x=major, y=freq)) + labs(title = "Majors of Participants", x="Major", y="Count") + 
-      plot_theme + theme(axis.text.x=element_text(angle=60,hjust=1)) + scale_fill_manual(values=c(red, blue)) 
+    majors = dataset %>% select(Majors,Year) %>% unnest(Majors)
+    colnames(majors) = c('Year', 'Major')
+    majors$stem = sapply(majors$Major, is_stem)
+    pt2 = ggplot(majors, aes(x=Major)) + labs(title = "Majors of Participants", x="Major", y="Count") + 
+      plot_theme + theme(axis.text.x=element_text(angle=60,hjust=1)) + scale_fill_manual(values=c(red, blue, green, 'gray')) 
       
-    if(input$stem){
+    if(input$breakdown == '2'){
       pt1 = pt1 + geom_bar(position='stack', width = 0.5, aes(fill=stem))
-      pt2 = pt2 + geom_bar(position='stack', stat = "identity", aes(fill=stem))
+      pt2 = pt2 + geom_bar(position='stack', aes(fill=stem))
+    } else if(input$breakdown == '3'){
+      pt1 = pt1 + geom_bar(position='stack', width = 0.5, aes(fill=Year))
+      pt2 = pt2 + geom_bar(position='stack', aes(fill=Year))
     } else{
       pt1 = pt1 + geom_bar(width = 0.5, fill=green)
-      pt2 = pt2 + geom_bar(stat = "identity", fill = red) 
+      pt2 = pt2 + geom_bar(fill = red) 
     }
     
     if(input$count){
       pt1 = pt1 + geom_text(stat='count', aes(label=..count..), vjust=-1, size=3)
-      pt2 = pt2 + geom_text(aes(label=freq), vjust=-1, size=3)
+      pt2 = pt2 + geom_text(stat='count', aes(label=..count..), vjust=-1, size=3)
     }
     
     plots = list(pt1, pt2)

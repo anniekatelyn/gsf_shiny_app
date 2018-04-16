@@ -38,9 +38,11 @@ fluidPage(
     
     checkboxInput('count', 'Show Counts'),
     
-    checkboxInput('stem', 'Show STEM Breakdown'),
-    
     checkboxInput('compare', 'Side-by-Side Comparison'),
+    
+    radioButtons('breakdown', label='Show Breakdown', choices = list(
+      'None'=1, 'STEM'=2, 'Graduation Year'=3
+    ), selected = 1),
     
     htmlOutput("qdict")
     
