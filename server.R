@@ -220,22 +220,3 @@ function(input, output) {
     }
   })
 }
-
-
-### OLD PLOTS ###
-
-# pt1 = ggplot(dat1, aes(x=Question, group = Response, fill=Response)) + geom_bar(position="dodge") +
-#   labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Response Count", x="Scenario") +
-#   scale_fill_manual(values=c(red, blue, green)) + plot_theme
-
-# pt2 = ggplot(dat2, aes(x=Question, group = Response, fill=Response)) + geom_bar(position="dodge") +
-#   labs(title='Responses to "Electrogenic Human" Scenarios', y="Response Count", x="Scenario") +
-#   scale_fill_manual(values=c(red, blue, green)) + plot_theme
-
-# pt3 = ggplot(dat3, aes(x=Question, group = Response, fill=Response)) + geom_bar(position="dodge") +
-#   labs(title='Responses to "Cloning" Scenarios', y="Response Count", x="Scenario") +
-#   scale_fill_manual(values=c(red, blue, green)) + plot_theme
-# 
-# pt4 = ggplot(dat4, aes(x=Question, group = Response, fill=Response)) + geom_bar(position="dodge") +
-#   labs(title='Responses to "Modification of Sense of Smell" Scenarios', y="Response Count", x="Scenario") +
-#   scale_fill_manual(values=c(red, blue, green)) + plot_theme
