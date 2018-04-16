@@ -6,27 +6,23 @@ library(tidyr)
 library(gridExtra)
 library(dplyr)
 
-### Google Sheet Values ###
-gsheet_title = "Survey: Technological Modifications of the Human  (Responses)"
-gsheet = gs_title(gsheet_title)
-ws_title = gs_ws_ls(gsheet)[1]
-
-### Plot Theme ###
-red='#e78285'
-blue='#91bbe4'
-green='#51b797'
-font='Calibri'
-plot_theme = theme(plot.title = element_text(family=font,face="bold"),
-                   axis.text = element_text(family = font),
-                   axis.title = element_text(family=font),
-                   legend.text = element_text(family=font))
+# setwd('/Users/AnnieTang/Documents/DUKE/17-18/GSF 366/gsf_shiny_app')
+update_survey_dat = function(){
+  gsheet_title = "Survey: Technological Modifications of the Human  (Responses)"
+  gsheet = gs_title(gsheet_title)
+  ws_title = gs_ws_ls(gsheet)[1]
+  dat = gs_read(ss=gsheet, ws=ws_title)
+  dat = as.data.frame(dat)
+  dat = dat[c(-1, -ncol(dat))] 
+  # switch order of B3 and B4, error in ordering of initial survey 
+  dat = dat[,c(1,2,3,4,5,6,8,7,9,10,11,12,13,14,15,16,17,18)]
+  saveRDS(dat, file = "survey_dat.rds")
+}
 
 ### Scenario Key ###
 categories = c('Genetic Modification and Testing', 'Electrogenic Human', 'Cloning', 'Modification of Sense of Smell')
 dict = c()
-dat = gs_read(ss=gsheet, ws=ws_title)
-dat = as.data.frame(dat)
-dat = dat[c(-1, -ncol(dat))]
+dat = readRDS(file='survey_dat.rds')
 questions = colnames(dat)[seq(1,16)]
 questions = gsub('\\[', '', questions)
 questions = gsub('\\]', '', questions)
@@ -40,7 +36,7 @@ for(i in 1:4){
   dict = c(dict, '<br/>')
 }
 
-### Clean & Get Data ### 
+### Clean & Get Majors ### 
 extract_majors = function(s){
   split = unlist(strsplit(s, ","))
   split = trimws(split)
@@ -55,15 +51,11 @@ is_stem = function(majors){
 }
 
 get_dat = function(){
-  dat = gs_read(ss=gsheet, ws=ws_title)
-  dat = as.data.frame(dat)
-  dat = dat[c(-1, -ncol(dat))] # remove first and last column
-  questions = colnames(dat)[-c(17,18)] # extract questions and rename columns
+  dat = readRDS(file='survey_dat.rds')
   qcols = c(paste('A', seq(1,4), sep=""),
             paste('B', seq(1,4), sep=""),
             paste('C', seq(1,4), sep=""),
             paste('D', seq(1,4), sep=""))
-  
   colnames(dat) = c(qcols, 'Majors', colnames(dat)[18])
   dat$Year = as.numeric(str_extract_all(dat$Year, "[0-9]+")) # extract numerical graduating year
   dat$Year = as.factor(dat$Year)
@@ -73,6 +65,16 @@ get_dat = function(){
 }
 
 dat = get_dat()
+
+### Plot Theme ###
+red='#e78285'
+blue='#91bbe4'
+green='#51b797'
+font='Calibri'
+plot_theme = theme(plot.title = element_text(family=font,face="bold"),
+                   axis.text = element_text(family = font),
+                   axis.title = element_text(family=font),
+                   legend.text = element_text(family=font))
 
 function(input, output) {
   
@@ -147,7 +149,7 @@ function(input, output) {
       title = paste0('Responses to "', input$cat, '" Scenarios')
       
       pt = ggplot(dataset, aes(x=Response)) + labs(title=title, y="Count", x="") +
-      scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
+      scale_fill_manual(values=c(red, blue, green)) + facet_grid(~ Question) + plot_theme
       
       if(input$stem) pt = pt + geom_bar(position='stack', aes(fill=stem))
       else pt = pt + geom_bar(position='dodge', aes(fill=Response))
