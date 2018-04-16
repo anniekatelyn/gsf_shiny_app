@@ -78,6 +78,11 @@ plot_theme = theme(plot.title = element_text(family=font,face="bold"),
 
 function(input, output) {
   
+  observeEvent(input$refresh, {
+    update_survey_dat()
+    dat = get_dat()
+  })
+  
   output$description = renderText(
     "This survey provides four ways in which humans can use genetic engineering or other technologies to alter 
     the human body for various purposes. Not all of these technologies are currently possible, but could be in the future. 
@@ -226,4 +231,5 @@ function(input, output) {
       return(HTML(paste0(header, key)))
     }
   })
+  
 }
