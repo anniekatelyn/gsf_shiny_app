@@ -1,0 +1,20 @@
+A1 : Finding out the biological sex of your child
+A2 : Fetal surgery/intervention to treat diseases or congenital problems
+A3 : Germline genetic modification (changing genes in egg/sperm cells or very early embryos) of inheritable diseases (ex. Cystic fibrosis)
+A4 : Designer Babies: allowing parents the ability to select desirable traits, such as selecting genes to promote increased muscle mass, high intelligence, or physical attributes such as hair/eye color and height
+<br/>
+B1 : Biological pacemakers to correct for cardiac arrhythmia
+B2 : Insert electrogenic cells into the body to power a prosthetic limb
+B3 : Genetically engineer an electric organ for humans (typically found in electric eels) to activate as a reflex to shock predators when swimming; can be applied to underwater direct combat in warfare
+B4 : Genetically engineer an electric organ for humans (typically found in electric eels) to autonomously control when they can shock others while swimming
+<br/>
+C1 : Molecular cloning using bacteria (such as in a laboratory strain of E. Coli)
+C2 : Therapeutic cloning of stem cells used to in a bone marrow transplant to damaged tissue after toxic cancer treatment
+C3 : Regrowing organs from cloned cells, grown in an animal such as a pig
+C4 : Cloning humans, such as yourself or someone in your family
+<br/>
+D1 : Alter the shape of a nose through plastic surgery
+D2 : Restore the function of a nose by inserting a sensor to detect smell following an accident that impaired sense of smell
+D3 : Augment the capacity to smell through the insertion of a sensor that helps detect smells beyond normal human range
+D4 : Change the capacity to smell through the insertion of a sensor that turns smell into color.
+<br/>

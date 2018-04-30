@@ -1,5 +1,3 @@
-library(shiny)
-library(ggplot2)
 
 categories = c('Genetic Modification and Testing', 'Electrogenic Human', 'Cloning', 'Modification of Sense of Smell')
 description = "This survey provides 4 ways in which humans can use genetic engineering or other technologies to alter the human body for various purposes. 
@@ -28,7 +26,7 @@ fluidPage(
            
     h4("Project Description:"),
     
-    textOutput("description"),
+    htmlOutput("description"),
     
     br(), br(),
     

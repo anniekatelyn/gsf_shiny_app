@@ -5,8 +5,8 @@ account: anniekatelyntang
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 320223
-bundleId: 1321606
+bundleId: 1322288
 url: https://anniekatelyntang.shinyapps.io/gsf366/
-when: 1523897927.33735
+when: 1523919415.16649
 asMultiple: FALSE
 asStatic: FALSE

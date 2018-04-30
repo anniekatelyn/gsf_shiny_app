@@ -7,64 +7,56 @@ library(gridExtra)
 library(dplyr)
 
 # setwd('/Users/AnnieTang/Documents/DUKE/17-18/GSF 366/gsf_shiny_app')
-update_survey_dat = function(){
-  gsheet_title = "Survey: Technological Modifications of the Human  (Responses)"
-  gsheet = gs_title(gsheet_title)
-  ws_title = gs_ws_ls(gsheet)[1]
-  dat = gs_read(ss=gsheet, ws=ws_title)
-  dat = as.data.frame(dat)
-  dat = dat[c(-1, -ncol(dat))] 
-  # switch order of B3 and B4, error in ordering of initial survey 
-  dat = dat[,c(1,2,3,4,5,6,8,7,9,10,11,12,13,14,15,16,17,18)]
-  saveRDS(dat, file = "survey_dat.rds")
-}
 
-### Scenario Key ###
-categories = c('Genetic Modification and Testing', 'Electrogenic Human', 'Cloning', 'Modification of Sense of Smell')
-dict = c()
-dat = readRDS(file='survey_dat.rds')
-questions = colnames(dat)[seq(1,16)]
-questions = gsub('\\[', '', questions)
-questions = gsub('\\]', '', questions)
-keys = c(paste('A', seq(1,4), sep=""), paste('B', seq(1,4), sep=""), paste('C', seq(1,4), sep=""), paste('D', seq(1,4), sep=""))
-add = 0
-for(i in 1:4){
-  for(j in 1:4){
-    dict = c(dict, paste(keys[j+add], ":", questions[j+add], sep=" "))
-  }
-  add = add + 4
-  dict = c(dict, '<br/>')
-}
+stem_subjs = c("Biology", "Chemistry", "Neuroscience", "BME", "ECE", "Mechanical Engineering", 
+               "Computer Science", "Math", "Statistics", "Environmental Science", "Environmental Engineering")
 
-### Clean & Get Majors ### 
 extract_majors = function(s){
   split = unlist(strsplit(s, ","))
   split = trimws(split)
   return(split)
 }
-stem_subjs = c("Biology", "Chemistry", "Neuroscience", "BME", "ECE", "Mechanical Engineering", 
-               "Computer Science", "Math", "Statistics", "Environmental Science", "Environmental Engineering")
+
 is_stem = function(majors){
   isStem = any(stem_subjs %in% majors)
-  if(isStem) return("STEM")
-  else return("Non-STEM")
+  if(isStem) return(1)
+  else return(0)
 }
 
-get_dat = function(){
-  dat = readRDS(file='survey_dat.rds')
+refresh_dat = function(){
+  # refresh OAuth token
+  gs_auth()
+  # rescrape data from google sheet 
+  gsheet_title = "Survey: Technological Modifications of the Human  (Responses)"
+  gsheet = gs_title(gsheet_title)
+  ws_title = gs_ws_ls(gsheet)[1]
+  dat = gs_read(ss=gsheet, ws=ws_title)
+  dat = as.data.frame(dat)
+  # remove timestamp and extra column at end
+  dat = dat[c(-1, -ncol(dat))] 
+  # switch order of B3 and B4, error in ordering of initial survey 
+  dat = dat[,c(1,2,3,4,5,6,8,7,9,10,11,12,13,14,15,16,17,18)]
+  # set new column names for brevity
   qcols = c(paste('A', seq(1,4), sep=""),
             paste('B', seq(1,4), sep=""),
             paste('C', seq(1,4), sep=""),
             paste('D', seq(1,4), sep=""))
   colnames(dat) = c(qcols, 'Majors', colnames(dat)[18])
-  dat$Year = as.numeric(str_extract_all(dat$Year, "[0-9]+")) # extract numerical graduating year
+  # extract numerical graduating year
+  dat$Year = as.numeric(str_extract_all(dat$Year, "[0-9]+")) 
   dat$Year = as.factor(dat$Year)
+  # extract majors and create STEM column
   dat$Majors = sapply(dat$Majors, extract_majors)
-  dat$stem = sapply(dat$Majors, is_stem)
+  dat$Stem = sapply(dat$Majors, is_stem)
+  dat$Stem = as.factor(dat$Stem)
+  saveRDS(dat, file = "survey_dat.rds")
   return(dat)
 }
 
-dat = get_dat()
+# dat = refresh_dat()
+
+dict = scan('key.txt', what='character', sep='\n')
+dat = readRDS(file="survey_dat.rds")
 
 ### Plot Theme ###
 red='#e78285'
@@ -79,17 +71,14 @@ plot_theme = theme(plot.title = element_text(family=font,face="bold"),
 function(input, output) {
   
   observeEvent(input$refresh, {
-    update_survey_dat()
-    dat = get_dat()
+    dat = refresh_dat()
   })
   
-  output$description = renderText(
-    "This survey provides four ways in which humans can use genetic engineering or other technologies to alter 
-    the human body for various purposes. Not all of these technologies are currently possible, but could be in the future. 
-    Each scenario is rated with a level of comfort on a scale of 1-3 (1 = opposed, 2 = neutral, and 3 = support). 
-    The results of this survey analyze conceptions about the ethical dilemmas we face as technological advances break down 
-    boundaries between human and machine."
-  )
+  output$description = renderUI({
+    desc_txt = scan('proj_desc.txt', what='character', sep='\n')
+    desc = paste(desc_txt, collapse='<br/><br/>')
+    HTML(desc) 
+  })
   
   output$plot = renderPlot({
     dataset = dat
@@ -98,31 +87,31 @@ function(input, output) {
       # reshape tables for ggplot
       dataset$ID = seq.int(nrow(dataset))
       dat1 = dataset[c(seq(1,4),seq(17,ncol(dataset)))]
-      dat1 = dat1 %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
+      dat1 = dat1 %>% gather(Question, Response, -Year, -Majors, -ID, -Stem)
       dat2 = dataset[c(seq(5,8),seq(17,ncol(dataset)))]
-      dat2 = dat2 %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
+      dat2 = dat2 %>% gather(Question, Response, -Year, -Majors, -ID, -Stem)
       dat3 = dataset[c(seq(9,12),seq(17,ncol(dataset)))]
-      dat3 = dat3 %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
+      dat3 = dat3 %>% gather(Question, Response, -Year, -Majors, -ID, -Stem)
       dat4 = dataset[seq(13,ncol(dataset))]
-      dat4 = dat4 %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
+      dat4 = dat4 %>% gather(Question, Response, -Year, -Majors, -ID, -Stem)
       
       pt1 = ggplot(dat1, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
         scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
-      pt2 = ggplot(dat2, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
+      pt2 = ggplot(dat2, aes(x=Response)) + labs(title='Responses to "Electrogenic Human" Scenarios', y="Count", x="") +
         scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
-      pt3 = ggplot(dat3, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
+      pt3 = ggplot(dat3, aes(x=Response)) + labs(title='Responses to "Cloning" Scenarios', y="Count", x="") +
         scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
-      pt4 = ggplot(dat4, aes(x=Response)) + labs(title='Responses to "Genetic Modification and Testing" Scenarios', y="Count", x="") +
+      pt4 = ggplot(dat4, aes(x=Response)) + labs(title='Responses to "Modification of Sense of Smell" Scenarios', y="Count", x="") +
         scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme + theme(axis.text.x = element_blank())
       
       if(input$breakdown == '2'){
-        pt1 = pt1 + geom_bar(position='stack', aes(fill=stem))
-        pt2 = pt2 + geom_bar(position='stack', aes(fill=stem))
-        pt3 = pt3 + geom_bar(position='stack', aes(fill=stem))
-        pt4 = pt4 + geom_bar(position='stack', aes(fill=stem))
+        pt1 = pt1 + geom_bar(position='stack', aes(fill=Stem))
+        pt2 = pt2 + geom_bar(position='stack', aes(fill=Stem))
+        pt3 = pt3 + geom_bar(position='stack', aes(fill=Stem))
+        pt4 = pt4 + geom_bar(position='stack', aes(fill=Stem))
       } else if(input$breakdown == '3'){
         pt1 = pt1 + geom_bar(position='stack', aes(fill=Year))
         pt2 = pt2 + geom_bar(position='stack', aes(fill=Year))
@@ -153,14 +142,14 @@ function(input, output) {
              'Modification of Sense of Smell' = {dataset = dataset[seq(13,ncol(dataset))]})
 
       dataset$ID = seq.int(nrow(dataset))
-      dataset = dataset %>% gather(Question, Response, -Year, -Majors, -ID, -stem)
+      dataset = dataset %>% gather(Question, Response, -Year, -Majors, -ID, -Stem)
       
       title = paste0('Responses to "', input$cat, '" Scenarios')
       
       pt = ggplot(dataset, aes(x=Response)) + labs(title=title, y="Count", x="") +
       scale_fill_manual(values=c(red, blue, green,'gray')) + facet_grid(~ Question) + plot_theme
       
-      if(input$breakdown == '2') pt = pt + geom_bar(position='stack', aes(fill=stem))
+      if(input$breakdown == '2') pt = pt + geom_bar(position='stack', aes(fill=Stem))
       else if(input$breakdown =='3') pt = pt + geom_bar(position='stack', aes(fill=Year))
       else pt = pt + geom_bar(position='dodge', aes(fill=Response))
       
@@ -179,13 +168,14 @@ function(input, output) {
     
     majors = dataset %>% select(Majors,Year) %>% unnest(Majors)
     colnames(majors) = c('Year', 'Major')
-    majors$stem = sapply(majors$Major, is_stem)
+    majors$Stem = sapply(majors$Major, is_stem)
+    majors$Stem = as.factor(majors$Stem)
     pt2 = ggplot(majors, aes(x=Major)) + labs(title = "Majors of Participants", x="Major", y="Count") + 
       plot_theme + theme(axis.text.x=element_text(angle=60,hjust=1)) + scale_fill_manual(values=c(red, blue, green, 'gray')) 
       
     if(input$breakdown == '2'){
-      pt1 = pt1 + geom_bar(position='stack', width = 0.5, aes(fill=stem))
-      pt2 = pt2 + geom_bar(position='stack', aes(fill=stem))
+      pt1 = pt1 + geom_bar(position='stack', width = 0.5, aes(fill=Stem))
+      pt2 = pt2 + geom_bar(position='stack', aes(fill=Stem))
     } else if(input$breakdown == '3'){
       pt1 = pt1 + geom_bar(position='stack', width = 0.5, aes(fill=Year))
       pt2 = pt2 + geom_bar(position='stack', aes(fill=Year))
@@ -206,8 +196,6 @@ function(input, output) {
   }, height=600)
   
   output$google_form = renderUI({
-    dat = get_dat()
-    
     tags$iframe(id = "googleform",
                 src = "https://docs.google.com/forms/d/e/1FAIpQLSeTr3axzQEzfiuf2LpP6Gzi4cb8Uk3F_yf1CDEYI3GnA97Lgw/viewform?embedded=true",
                 width = 900,
